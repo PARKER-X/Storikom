@@ -10,7 +10,11 @@ dependencies = [
     "fitz>=0.0.1.dev2",
     "google-generativeai>=0.8.5",
     "langchain>=0.3.27",
+    "langchain-community>=0.3.31",
+    "langchain-google-genai>=2.0.10",
     "pymupdf>=1.26.5",
     "python-dotenv>=1.1.1",
     "sentence-transformers>=5.1.1",
+    "streamlit>=1.50.0",
+    "u>=1.0.4",
 ]

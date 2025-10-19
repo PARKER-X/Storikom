@@ -1,45 +1,66 @@
 import google.generativeai as genai
 from typing import List
-import os 
+import os
 from dotenv import load_dotenv
-import google.generativeai as genai
 
 # Load Gemini API key
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
 # Load Gemini model
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-
-def extract_characters_from_text(text: str) -> List[dict]:
+def extract_characters_from_text(text: str, debug: bool = False) -> List[dict]:
     """
-    Use Google's Gemini model to extract characters from book text.
+    Extract main characters using Gemini from the book text.
+    Returns a list of dicts: [{"name": ..., "description": ...}]
     """
     if len(text) > 3000:
-        text = text[:3000]  # Keep prompt size within limits
+        text = text[:3000]  # Limit to keep context small and fast
 
     prompt = f"""
-    From the following book text, extract the main characters.
-    For each character, provide:
-    - Name
-    - Short description (role, personality, etc.)
-    - (Optional) relationships with others
+From the book text below, extract a list of the main characters.
+For each character, return the following in exactly one line:
 
-    TEXT:
-    {text}
-    """
+Character Name: Brief description (max 20 words)
 
-    response = model.generate_content(prompt)
-    output = response.text
+Avoid using bullet points, asterisks, or markdown. Just a plain list.
 
-    # Basic parsing (you can improve this)
-    characters = []
-    for line in output.split("\n"):
-        if ":" in line:
+EXAMPLE FORMAT:
+Frodo Baggins: A brave hobbit chosen to carry the One Ring.
+Gandalf: A wise wizard guiding the fellowship on their quest.
+
+TEXT:
+{text}
+"""
+
+    try:
+        response = model.generate_content(prompt)
+        output = response.text
+
+        if debug:
+            print("\n🔍 GEMINI RAW RESPONSE:\n")
+            print(output)
+        
+        characters = []
+        for line in output.splitlines():
+            line = line.strip()
+            if not line or ":" not in line:
+                continue
+
             parts = line.split(":", 1)
-            if len(parts) == 2:
-                name = parts[0].strip()
-                desc = parts[1].strip()
-                characters.append({"name": name, "description": desc})
-    
-    return characters
+            name = parts[0].strip()
+            desc = parts[1].strip()
+
+            if name and desc and len(name) < 100:
+                characters.append({
+                    "name": name,
+                    "description": desc
+                })
+
+        return characters
+
+    except Exception as e:
+        if debug:
+            print("⚠️ Error calling Gemini:", e)
+        return []
