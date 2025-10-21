@@ -1,6 +1,7 @@
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+import textwrap
 
 # Load Gemini API key
 load_dotenv()
@@ -8,35 +9,73 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-def rewrite_story_from_pov(character_name, traits, full_text):
+def chunk_text(text, max_chunk_size=3500):
     """
-    Rewrite the entire story from the character's point of view.
+    Split the text into chunks of approximately max_chunk_size characters,
+    breaking at sentence boundaries for cleaner splits.
     """
-    if len(full_text) > 40000:
-        full_text = full_text[:40000]  # Limit to keep within Gemini context window
+    sentences = text.split('. ')
+    chunks = []
+    current_chunk = ""
+    for sentence in sentences:
+        if len(current_chunk) + len(sentence) + 2 <= max_chunk_size:
+            current_chunk += sentence + ". "
+        else:
+            chunks.append(current_chunk.strip())
+            current_chunk = sentence + ". "
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+    return chunks
 
+def rewrite_chunk_from_pov(character_name, traits, chunk_text, chunk_number):
+    """
+    Rewrite a chunk of story text from the character's POV with rich detail.
+    """
     prompt = f"""
 You are **{character_name}**, a major character in the story below.
 
 Your traits and personality are as follows: {traits}.
 
-Now, rewrite the **entire story** from **your perspective**. Follow these strict instructions:
+Rewrite the following **part of the story** from your **first-person point of view**. Follow these instructions carefully:
 
-- 🧠 Tell the story in **first-person narration** as if you're living it.
-- 🪞 Start with your **origin, past, and beliefs** before the story begins.
-- ⚔️ Describe all major events **as you experienced them** — your fears, hopes, pain, anger, love, jealousy, pride.
-- 🧭 When other characters act, describe how **you perceived** them — not objective truth, but your **emotional truth**.
-- 🌊 Show your **emotional evolution** through the events of the story.
-- 🕊 If you die, end with your **final thoughts** or **emotional resolution**.
-
-This is not a summary or analysis. This is a **rewriting of the story** from your **soul's point of view**. Stay fully in character.
+- Use **first-person narration** as if you are living each moment.
+- Begin by briefly reminding the reader of your **background and beliefs** relevant to this part.
+- For every event, describe your **sensations, emotions, fears, hopes, pain, anger, love, jealousy, pride** — your full emotional truth.
+- Include **detailed scenes, dialogues, and inner monologues** that reveal your character deeply.
+- Describe how you **perceive other characters and their actions**, emphasizing your subjective perspective.
+- Show your **emotional and mental evolution** through these events.
+- This is **not a summary**; it should be a rich, immersive retelling in your voice.
+- End this part with your personal reflection or emotional state.
 
 ---
 
-STORY:
-{full_text}
-"""
+### Part {chunk_number} of the story:
 
+{chunk_text}
+"""
 
     response = model.generate_content(prompt)
     return response.text
+
+def rewrite_story_from_pov(character_name, traits, full_text, max_chunk_size=3500):
+    """
+    Rewrite the entire story by chunking it and rewriting each chunk from the character's POV.
+    """
+    chunks = chunk_text(full_text, max_chunk_size)
+    rewritten_parts = []
+    
+    for i, chunk in enumerate(chunks, start=1):
+        print(f"Rewriting chunk {i}/{len(chunks)}...")  # Optional: progress feedback
+        rewritten_chunk = rewrite_chunk_from_pov(character_name, traits, chunk, i)
+        rewritten_parts.append(rewritten_chunk)
+    
+    return "\n\n".join(rewritten_parts)
+
+# Example usage:
+# character_name = "Karna"
+# traits = "Loyal, brave, proud, tragic hero, struggling with identity and acceptance"
+# with open("mahabharata_full_text.txt", "r", encoding="utf-8") as f:
+#     full_text = f.read()
+#
+# rewritten_story = rewrite_story_from_pov(character_name, traits, full_text)
+# print(rewritten_story)
