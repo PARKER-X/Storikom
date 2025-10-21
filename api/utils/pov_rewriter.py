@@ -71,11 +71,3 @@ def rewrite_story_from_pov(character_name, traits, full_text, max_chunk_size=350
     
     return "\n\n".join(rewritten_parts)
 
-# Example usage:
-# character_name = "Karna"
-# traits = "Loyal, brave, proud, tragic hero, struggling with identity and acceptance"
-# with open("mahabharata_full_text.txt", "r", encoding="utf-8") as f:
-#     full_text = f.read()
-#
-# rewritten_story = rewrite_story_from_pov(character_name, traits, full_text)
-# print(rewritten_story)
