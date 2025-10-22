@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookiFi – Rewrite from Character POV</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>📖 BookiFi: Rewrite From Character's POV</h1>
+
+    <!-- Upload PDF Section -->
+    <section id="upload-section" class="card">
+      <h2>1. Upload PDF</h2>
+      <div id="upload-area" class="upload-area">
+        <p>Drag & drop your PDF here or</p>
+        <input type="file" id="file-input" accept="application/pdf" hidden />
+        <button id="upload-btn">Choose File</button>
+      </div>
+      <p id="file-name" class="file-name"></p>
+      <div id="upload-loading" class="loader hidden">Uploading...</div>
+    </section>
+
+    <!-- Extract Characters Section -->
+    <section id="extract-section" class="card hidden">
+      <h2>2. Extract Characters</h2>
+      <button id="extract-btn">Extract Characters</button>
+      <div id="character-loading" class="loader hidden">Extracting...</div>
+      <div id="character-list" class="character-list"></div>
+    </section>
+
+    <!-- Rewrite Section -->
+    <section id="rewrite-section" class="card hidden">
+      <h2>3. Rewrite Story from POV</h2>
+      <p id="selected-character-name"></p>
+      <button id="rewrite-btn">Rewrite Story</button>
+      <div id="rewrite-loading" class="loader hidden">Rewriting...</div>
+      <div id="rewritten-story" class="story-output"></div>
+    </section>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

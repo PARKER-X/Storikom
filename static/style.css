@@ -1,0 +1,111 @@
+/* Reset & base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f6f8;
+  color: #333;
+  padding: 2rem;
+}
+
+/* Container */
+.container {
+  max-width: 800px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Card sections */
+.card {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Upload */
+.upload-area {
+  border: 2px dashed #ccc;
+  padding: 2rem;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: #fafafa;
+}
+.upload-area:hover {
+  background-color: #f0f0f0;
+}
+button {
+  background-color: #0057d9;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+button:hover {
+  background-color: #0041aa;
+}
+.file-name {
+  margin-top: 0.5rem;
+  font-style: italic;
+  color: #666;
+}
+
+/* Character cards */
+.character-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.character-card {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #fdfdfd;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.character-card:hover {
+  background-color: #e6f0ff;
+}
+.character-card.selected {
+  border: 2px solid #0057d9;
+  background-color: #e0ecff;
+}
+
+/* Story output */
+.story-output {
+  margin-top: 1rem;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  background: #fefefe;
+  border-left: 4px solid #0057d9;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+/* Loader */
+.loader {
+  margin-top: 1rem;
+  font-style: italic;
+  color: #777;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container {
+    padding: 1rem;
+  }
+}
