@@ -1,134 +1,165 @@
-const fileInput = document.getElementById("file-input");
-const uploadBtn = document.getElementById("upload-btn");
-const uploadArea = document.getElementById("upload-area");
-const fileNameDisplay = document.getElementById("file-name");
-const uploadLoading = document.getElementById("upload-loading");
+'use strict';
 
-const extractBtn = document.getElementById("extract-btn");
-const extractSection = document.getElementById("extract-section");
-const characterLoading = document.getElementById("character-loading");
-const characterList = document.getElementById("character-list");
+document.addEventListener('DOMContentLoaded', () => {
+  const API_BASE = 'http://127.0.0.1:8000';
+  // Elements
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  const btnBrowse = document.getElementById('btn-browse');
+  const fileNameEl = document.getElementById('file-name');
+  const uploadStatus = document.getElementById('upload-status');
 
-const rewriteSection = document.getElementById("rewrite-section");
-const selectedCharName = document.getElementById("selected-character-name");
-const rewriteBtn = document.getElementById("rewrite-btn");
-const rewriteLoading = document.getElementById("rewrite-loading");
-const storyOutput = document.getElementById("rewritten-story");
+  const sectionExtract = document.getElementById('section-extract');
+  const btnExtract = document.getElementById('btn-extract');
+  const extractStatus = document.getElementById('extract-status');
+  const charactersGrid = document.getElementById('characters');
 
-let selectedCharacter = null;
-let uploadedFile = null;
+  const sectionRewrite = document.getElementById('section-rewrite');
+  const btnRewrite = document.getElementById('btn-rewrite');
+  const rewriteStatus = document.getElementById('rewrite-status');
+  const outputEl = document.getElementById('output');
 
-// Handle file selection
-uploadBtn.addEventListener("click", () => fileInput.click());
+  // State
+  let uploaded = false;
+  let selectedCharacter = null;
+  let characters = [];
 
-uploadArea.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  uploadArea.classList.add("dragging");
-});
-uploadArea.addEventListener("dragleave", () => {
-  uploadArea.classList.remove("dragging");
-});
-uploadArea.addEventListener("drop", (e) => {
-  e.preventDefault();
-  uploadArea.classList.remove("dragging");
-  const file = e.dataTransfer.files[0];
-  handleFileUpload(file);
-});
-fileInput.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  handleFileUpload(file);
-});
+  // Utilities
+  function show(el) { el.classList.remove('hidden'); el.setAttribute('aria-hidden', 'false'); }
+  function hide(el) { el.classList.add('hidden'); el.setAttribute('aria-hidden', 'true'); }
+  function setLoading(el, text) { el.textContent = text; el.classList.add('loading'); }
+  function clearLoading(el) { el.classList.remove('loading'); }
+  function setStatus(el, text) { el.textContent = text; }
 
-async function handleFileUpload(file) {
-  if (!file || file.type !== "application/pdf") {
-    alert("Please upload a valid PDF file.");
-    return;
+  function validatePDF(file) { return file && (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')); }
+
+  // Dropzone behavior
+  function handleFiles(files) {
+    const file = files[0];
+    if (!validatePDF(file)) {
+      setStatus(uploadStatus, 'Please select a valid PDF file.');
+      return;
+    }
+    fileNameEl.textContent = file.name;
+    uploadFile(file);
   }
 
-  uploadedFile = file;
-  fileNameDisplay.textContent = `Selected: ${file.name}`;
-  uploadLoading.classList.remove("hidden");
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropzone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('dragover'); });
+  });
+  ;['dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('dragover'); });
+  });
+  dropzone.addEventListener('drop', e => { const dt = e.dataTransfer; if (dt && dt.files && dt.files.length) handleFiles(dt.files); });
+  dropzone.addEventListener('click', () => fileInput.click());
+  btnBrowse.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { if (e.target.files && e.target.files.length) handleFiles(e.target.files); });
 
-  const formData = new FormData();
-  formData.append("file", file);
-
-  try {
-    const response = await fetch("/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) throw new Error("Upload failed");
-    uploadLoading.classList.add("hidden");
-    extractSection.classList.remove("hidden");
-  } catch (error) {
-    console.error(error);
-    alert("Failed to upload PDF.");
-    uploadLoading.classList.add("hidden");
+  // Upload to /upload
+  async function uploadFile(file) {
+    try {
+      setLoading(uploadStatus, 'Uploading...');
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData });
+      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+      const data = await res.json().catch(() => ({}));
+      uploaded = true;
+      setStatus(uploadStatus, 'Uploaded successfully');
+      clearLoading(uploadStatus);
+      show(sectionExtract);
+      // Optional: if backend returns characters right away
+      if (Array.isArray(data.characters) && data.characters.length) {
+        characters = data.characters;
+        renderCharacters(characters);
+        show(sectionRewrite);
+      }
+    } catch (err) {
+      console.error(err);
+      clearLoading(uploadStatus);
+      setStatus(uploadStatus, 'Upload failed. Please try again.');
+      uploaded = false;
+    }
   }
-}
 
-// Extract Characters
-extractBtn.addEventListener("click", async () => {
-  characterLoading.classList.remove("hidden");
-  characterList.innerHTML = "";
+  // Extract characters
+  btnExtract.addEventListener('click', async () => {
+    if (!uploaded) return;
+    charactersGrid.innerHTML = '';
+    btnRewrite.disabled = true;
+    selectedCharacter = null;
+    setLoading(extractStatus, 'Extracting characters...');
+    try {
+      const res = await fetch(`${API_BASE}/characters`, { method: 'GET' });
+      if (!res.ok) throw new Error(`Characters request failed (${res.status})`);
+      const data = await res.json();
+      characters = Array.isArray(data) ? data : (data.characters || []);
+      if (!Array.isArray(characters)) characters = [];
+      renderCharacters(characters);
+      setStatus(extractStatus, characters.length ? `Found ${characters.length} characters` : 'No characters found');
+      clearLoading(extractStatus);
+      show(sectionRewrite);
+    } catch (err) {
+      console.error(err);
+      clearLoading(extractStatus);
+      setStatus(extractStatus, 'Failed to extract characters.');
+    }
+  });
 
-  try {
-    const response = await fetch("/characters", {
-      method: "GET",
+  function renderCharacters(list) {
+    charactersGrid.innerHTML = '';
+    if (!list.length) return;
+    list.forEach((ch, idx) => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'card-item';
+      card.setAttribute('data-index', String(idx));
+      card.innerHTML = `<h3>${escapeHtml(ch.name || 'Unknown')}</h3><p>${escapeHtml(ch.description || '')}</p>`;
+      card.addEventListener('click', () => selectCharacter(idx));
+      charactersGrid.appendChild(card);
     });
+  }
 
-    const characters = await response.json();
+  function selectCharacter(index) {
+    const prev = charactersGrid.querySelector('.card-item.selected');
+    if (prev) prev.classList.remove('selected');
+    const card = charactersGrid.querySelector(`.card-item[data-index="${index}"]`);
+    if (card) card.classList.add('selected');
+    selectedCharacter = characters[index] || null;
+    btnRewrite.disabled = !selectedCharacter;
+  }
 
-    characters.forEach((char) => {
-      const card = document.createElement("div");
-      card.className = "character-card";
-      card.textContent = `${char.name}: ${char.description}`;
-      card.dataset.name = char.name;
-      card.dataset.description = char.description;
-
-      card.addEventListener("click", () => {
-        document.querySelectorAll(".character-card").forEach((c) => c.classList.remove("selected"));
-        card.classList.add("selected");
-        selectedCharacter = {
-          name: card.dataset.name,
-          description: card.dataset.description,
-        };
-        rewriteSection.classList.remove("hidden");
-        selectedCharName.textContent = `Selected: ${selectedCharacter.name}`;
+  // Rewrite
+  btnRewrite.addEventListener('click', async () => {
+    if (!selectedCharacter) return;
+    outputEl.textContent = '';
+    setLoading(rewriteStatus, 'Rewriting from POV...');
+    try {
+      const res = await fetch(`${API_BASE}/rewrite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ character: selectedCharacter })
       });
+      if (!res.ok) throw new Error(`Rewrite failed (${res.status})`);
+      const data = await res.json().catch(() => ({}));
+      const text = data.text || data.result || data.output || '';
+      outputEl.textContent = text || 'No rewritten text returned.';
+      setStatus(rewriteStatus, 'Done');
+      clearLoading(rewriteStatus);
+    } catch (err) {
+      console.error(err);
+      clearLoading(rewriteStatus);
+      setStatus(rewriteStatus, 'Failed to rewrite.');
+    }
+  });
 
-      characterList.appendChild(card);
-    });
-
-  } catch (error) {
-    alert("Failed to extract characters.");
-    console.error(error);
-  } finally {
-    characterLoading.classList.add("hidden");
-  }
-});
-
-// Rewrite Story
-rewriteBtn.addEventListener("click", async () => {
-  if (!selectedCharacter) return alert("No character selected.");
-
-  rewriteLoading.classList.remove("hidden");
-  storyOutput.textContent = "";
-
-  try {
-    const response = await fetch("/rewrite", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(selectedCharacter),
-    });
-
-    const data = await response.text();
-    storyOutput.textContent = data;
-  } catch (error) {
-    alert("Failed to rewrite story.");
-    console.error(error);
-  } finally {
-    rewriteLoading.classList.add("hidden");
+  // Helpers
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
   }
 });

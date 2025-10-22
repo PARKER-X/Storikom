@@ -1,45 +1,63 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BookiFi – Rewrite from Character POV</title>
-  <link rel="stylesheet" href="/static/style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>📖 BookiFi: Rewrite From Character's POV</h1>
-
-    <!-- Upload PDF Section -->
-    <section id="upload-section" class="card">
-      <h2>1. Upload PDF</h2>
-      <div id="upload-area" class="upload-area">
-        <p>Drag & drop your PDF here or</p>
-        <input type="file" id="file-input" accept="application/pdf" hidden />
-        <button id="upload-btn">Choose File</button>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Book POV Rewriter</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <h1>Book POV Rewriter</h1>
+        <p class="subtitle">Upload a book PDF, extract characters, and rewrite from a chosen POV.</p>
       </div>
-      <p id="file-name" class="file-name"></p>
-      <div id="upload-loading" class="loader hidden">Uploading...</div>
-    </section>
+    </header>
 
-    <!-- Extract Characters Section -->
-    <section id="extract-section" class="card hidden">
-      <h2>2. Extract Characters</h2>
-      <button id="extract-btn">Extract Characters</button>
-      <div id="character-loading" class="loader hidden">Extracting...</div>
-      <div id="character-list" class="character-list"></div>
-    </section>
+    <main class="container main">
+      <section id="section-upload" class="card">
+        <h2>Upload PDF</h2>
+        <div id="dropzone" class="dropzone" tabindex="0" aria-label="PDF dropzone">
+          <div class="dz-inner">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p><strong>Drag & drop</strong> your PDF here, or</p>
+            <button id="btn-browse" class="btn secondary" type="button">Choose File</button>
+            <input id="file-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
+        <div class="status-row">
+          <span id="file-name" class="muted">No file selected</span>
+          <span id="upload-status" class="status" aria-live="polite"></span>
+        </div>
+      </section>
 
-    <!-- Rewrite Section -->
-    <section id="rewrite-section" class="card hidden">
-      <h2>3. Rewrite Story from POV</h2>
-      <p id="selected-character-name"></p>
-      <button id="rewrite-btn">Rewrite Story</button>
-      <div id="rewrite-loading" class="loader hidden">Rewriting...</div>
-      <div id="rewritten-story" class="story-output"></div>
-    </section>
-  </div>
+      <section id="section-extract" class="card hidden" aria-hidden="true">
+        <h2>Extract Characters</h2>
+        <p class="muted">After upload, extract the main characters detected by AI.</p>
+        <div class="actions">
+          <button id="btn-extract" class="btn" type="button">Extract Characters</button>
+          <span id="extract-status" class="status" aria-live="polite"></span>
+        </div>
+        <div id="characters" class="grid"></div>
+      </section>
 
-  <script src="/static/script.js"></script>
-</body>
+      <section id="section-rewrite" class="card hidden" aria-hidden="true">
+        <h2>Rewrite Story from POV</h2>
+        <p class="muted">Select one character, then rewrite a portion from their perspective.</p>
+        <div class="actions">
+          <button id="btn-rewrite" class="btn" type="button" disabled>Rewrite Story from POV</button>
+          <span id="rewrite-status" class="status" aria-live="polite"></span>
+        </div>
+        <article id="output" class="output" aria-live="polite"></article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <small>Made for book analysis workflows</small>
+      </div>
+    </footer>
+
+    <script src="/static/script.js" defer></script>
+  </body>
 </html>
