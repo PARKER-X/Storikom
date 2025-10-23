@@ -20,12 +20,12 @@ if uploaded_file:
     st.success("✅ Text extracted successfully!")
     st.session_state["book_text"] = full_text
 
-    # Step 3: Chunk + Embed (Optional)
-    if st.button("🔍 (Optional) Embed text into ChromaDB"):
-        with st.spinner("Chunking and indexing..."):
-            chunks = chunk_text(full_text)
-            embed_and_save(chunks, book_id="book1")
-        st.success("✅ Embedded and saved!")
+    # # Step 3: Chunk + Embed (Optional)
+    # if st.button("🔍 (Optional) Embed text into ChromaDB"):
+    #     with st.spinner("Chunking and indexing..."):
+    #         chunks = chunk_text(full_text)
+    #         embed_and_save(chunks, book_id="book1")
+    #     st.success("✅ Embedded and saved!")
 
     # Step 4: Extract Characters
     if st.button("🎭 Extract Characters"):

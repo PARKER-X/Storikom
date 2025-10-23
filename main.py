@@ -6,7 +6,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from PyPDF2 import PdfReader
+from api.routes.pdf_extract import extract_text_from_pdf
 
 # Optional LLM integration
 USE_GEMINI = False
@@ -55,18 +55,6 @@ class Character(BaseModel):
 @app.get("/health")
 async def health() -> Dict[str, str]:
     return {"status": "ok"}
-
-
-def extract_text_from_pdf_bytes(data: bytes) -> str:
-    try:
-        reader = PdfReader(io.BytesIO(data))
-        texts: List[str] = []
-        for page in reader.pages:
-            txt = page.extract_text() or ""
-            texts.append(txt)
-        return "\n".join(texts).strip()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read PDF: {e}")
 
 
 def heuristic_extract_characters(text: str, max_chars: int = 8) -> List[Dict[str, str]]:
@@ -153,8 +141,15 @@ TEXT:
 async def upload(file: UploadFile = File(...)) -> JSONResponse:
     if file.content_type not in ("application/pdf", "application/octet-stream") and not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
-    data = await file.read()
-    text = extract_text_from_pdf_bytes(data)
+    # Use the user's PyMuPDF-based extractor operating on a file-like object
+    try:
+        try:
+            file.file.seek(0)
+        except Exception:
+            pass
+        text = extract_text_from_pdf(file.file)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read PDF: {e}")
     if not text:
         raise HTTPException(status_code=400, detail="No text could be extracted from PDF")
     STATE["full_text"] = text
@@ -187,4 +182,4 @@ async def rewrite(req: RewriteRequest) -> Dict[str, str]:
 # For local dev: uvicorn main:app --reload
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
