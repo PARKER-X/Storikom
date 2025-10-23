@@ -1,7 +1,7 @@
 import streamlit as st
 from routes.pdf_extract import extract_text_from_pdf
 from routes.embed import chunk_text
-from routes.chroma_db import embed_and_save, collection
+# from routes.chroma_db import embed_and_save, collection
 from utils.character_extractor import extract_characters_from_text
 from utils.pov_rewriter import rewrite_story_from_pov
 import tempfile
