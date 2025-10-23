@@ -5,6 +5,9 @@ from routes.embed import chunk_text
 from utils.character_extractor import extract_characters_from_text
 from utils.pov_rewriter import rewrite_story_from_pov
 import tempfile
+import google.generativeai as genai
+
+genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
 st.set_page_config(page_title="BookiFi: AI Book POV Rewriter", layout="wide")
 st.title("📚 BookiFi: Rewrite Novel From a Character's Point of View")
