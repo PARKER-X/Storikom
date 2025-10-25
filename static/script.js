@@ -1,165 +1,282 @@
-'use strict';
+// Configure if backend runs on another origin (e.g., http://127.0.0.1:8000)
+// Leave as empty string to use same origin
+const API_BASE = "";
 
-document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = 'http://127.0.0.1:8000';
-  // Elements
-  const dropzone = document.getElementById('dropzone');
-  const fileInput = document.getElementById('file-input');
-  const btnBrowse = document.getElementById('btn-browse');
-  const fileNameEl = document.getElementById('file-name');
-  const uploadStatus = document.getElementById('upload-status');
+// Elements
+const statusEl = document.getElementById("status");
 
-  const sectionExtract = document.getElementById('section-extract');
-  const btnExtract = document.getElementById('btn-extract');
-  const extractStatus = document.getElementById('extract-status');
-  const charactersGrid = document.getElementById('characters');
+const pdfFileEl = document.getElementById("pdfFile");
+const btnUpload = document.getElementById("btnUpload");
+const extractedTextEl = document.getElementById("extractedText");
 
-  const sectionRewrite = document.getElementById('section-rewrite');
-  const btnRewrite = document.getElementById('btn-rewrite');
-  const rewriteStatus = document.getElementById('rewrite-status');
-  const outputEl = document.getElementById('output');
+const btnExtractCharacters = document.getElementById("btnExtractCharacters");
+const characterListEl = document.getElementById("characterList");
+const characterSelectEl = document.getElementById("characterSelect");
+const traitsEl = document.getElementById("traits");
 
-  // State
-  let uploaded = false;
-  let selectedCharacter = null;
-  let characters = [];
+const modeToggleEl = document.getElementById("modeToggle");
+const customSceneWrap = document.getElementById("customSceneWrap");
+const paragraphTools = document.getElementById("paragraphTools");
+const rewriteSourceEl = document.getElementById("rewriteSource");
 
-  // Utilities
-  function show(el) { el.classList.remove('hidden'); el.setAttribute('aria-hidden', 'false'); }
-  function hide(el) { el.classList.add('hidden'); el.setAttribute('aria-hidden', 'true'); }
-  function setLoading(el, text) { el.textContent = text; el.classList.add('loading'); }
-  function clearLoading(el) { el.classList.remove('loading'); }
-  function setStatus(el, text) { el.textContent = text; }
+const bookViewEl = document.getElementById("bookView");
+const btnSelectAll = document.getElementById("btnSelectAll");
+const btnClearAll = document.getElementById("btnClearAll");
+const selectedCountEl = document.getElementById("selectedCount");
 
-  function validatePDF(file) { return file && (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')); }
+const btnRewrite = document.getElementById("btnRewrite");
+const rewriteOutputEl = document.getElementById("rewriteOutput");
+const btnDownload = document.getElementById("btnDownload");
 
-  // Dropzone behavior
-  function handleFiles(files) {
-    const file = files[0];
-    if (!validatePDF(file)) {
-      setStatus(uploadStatus, 'Please select a valid PDF file.');
-      return;
-    }
-    fileNameEl.textContent = file.name;
-    uploadFile(file);
+// State
+let extractedText = "";
+let characters = [];
+let paragraphs = []; // [{ id, text, selected }]
+let useExtractedMode = true;
+
+// Helpers
+function setStatus(message, type = "info") {
+  statusEl.textContent = message || "";
+  statusEl.className = `status ${type}`;
+}
+async function parseJSON(resp) {
+  const text = await resp.text();
+  try { return JSON.parse(text); } catch { return { raw: text }; }
+}
+function httpError(resp, body) {
+  const reason = body?.detail || body?.error || body?.message || body?.raw || resp.statusText;
+  throw new Error(`HTTP ${resp.status} • ${reason}`);
+}
+function updateControls() {
+  const hasText = (extractedText || "").trim().length > 0;
+  btnExtractCharacters.disabled = !hasText && useExtractedMode;
+  btnSelectAll.disabled = paragraphs.length === 0;
+  btnClearAll.disabled = paragraphs.length === 0;
+
+  const hasCharacters = characters.length > 0;
+  characterSelectEl.disabled = !hasCharacters;
+
+  let sourceOk = false;
+  if (useExtractedMode) {
+    sourceOk = paragraphs.some(p => p.selected) || hasText;
+  } else {
+    sourceOk = (rewriteSourceEl.value || "").trim().length > 0;
   }
+  btnRewrite.disabled = !hasCharacters || !characterSelectEl.value || !sourceOk;
+  btnDownload.disabled = (rewriteOutputEl.value || "").trim().length === 0;
+}
+function splitIntoParagraphs(text) {
+  return text
+    .split(/\n{2,}/g) // blank-line separated
+    .map(t => t.trim())
+    .filter(Boolean);
+}
+function renderParagraphs() {
+  bookViewEl.innerHTML = "";
+  paragraphs.forEach((p, idx) => {
+    const card = document.createElement("div");
+    card.className = "page-card";
 
-  ['dragenter', 'dragover'].forEach(evt => {
-    dropzone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('dragover'); });
-  });
-  ;['dragleave', 'drop'].forEach(evt => {
-    dropzone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('dragover'); });
-  });
-  dropzone.addEventListener('drop', e => { const dt = e.dataTransfer; if (dt && dt.files && dt.files.length) handleFiles(dt.files); });
-  dropzone.addEventListener('click', () => fileInput.click());
-  btnBrowse.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', e => { if (e.target.files && e.target.files.length) handleFiles(e.target.files); });
+    const header = document.createElement("div");
+    header.className = "page-header";
 
-  // Upload to /upload
-  async function uploadFile(file) {
-    try {
-      setLoading(uploadStatus, 'Uploading...');
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData });
-      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
-      const data = await res.json().catch(() => ({}));
-      uploaded = true;
-      setStatus(uploadStatus, 'Uploaded successfully');
-      clearLoading(uploadStatus);
-      show(sectionExtract);
-      // Optional: if backend returns characters right away
-      if (Array.isArray(data.characters) && data.characters.length) {
-        characters = data.characters;
-        renderCharacters(characters);
-        show(sectionRewrite);
-      }
-    } catch (err) {
-      console.error(err);
-      clearLoading(uploadStatus);
-      setStatus(uploadStatus, 'Upload failed. Please try again.');
-      uploaded = false;
-    }
-  }
-
-  // Extract characters
-  btnExtract.addEventListener('click', async () => {
-    if (!uploaded) return;
-    charactersGrid.innerHTML = '';
-    btnRewrite.disabled = true;
-    selectedCharacter = null;
-    setLoading(extractStatus, 'Extracting characters...');
-    try {
-      const res = await fetch(`${API_BASE}/characters`, { method: 'GET' });
-      if (!res.ok) throw new Error(`Characters request failed (${res.status})`);
-      const data = await res.json();
-      characters = Array.isArray(data) ? data : (data.characters || []);
-      if (!Array.isArray(characters)) characters = [];
-      renderCharacters(characters);
-      setStatus(extractStatus, characters.length ? `Found ${characters.length} characters` : 'No characters found');
-      clearLoading(extractStatus);
-      show(sectionRewrite);
-    } catch (err) {
-      console.error(err);
-      clearLoading(extractStatus);
-      setStatus(extractStatus, 'Failed to extract characters.');
-    }
-  });
-
-  function renderCharacters(list) {
-    charactersGrid.innerHTML = '';
-    if (!list.length) return;
-    list.forEach((ch, idx) => {
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'card-item';
-      card.setAttribute('data-index', String(idx));
-      card.innerHTML = `<h3>${escapeHtml(ch.name || 'Unknown')}</h3><p>${escapeHtml(ch.description || '')}</p>`;
-      card.addEventListener('click', () => selectCharacter(idx));
-      charactersGrid.appendChild(card);
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = p.selected;
+    checkbox.addEventListener("change", () => {
+      p.selected = checkbox.checked;
+      countSelected();
+      updateControls();
     });
-  }
 
-  function selectCharacter(index) {
-    const prev = charactersGrid.querySelector('.card-item.selected');
-    if (prev) prev.classList.remove('selected');
-    const card = charactersGrid.querySelector(`.card-item[data-index="${index}"]`);
-    if (card) card.classList.add('selected');
-    selectedCharacter = characters[index] || null;
-    btnRewrite.disabled = !selectedCharacter;
-  }
+    const label = document.createElement("label");
+    label.textContent = `Paragraph ${idx + 1}`;
 
-  // Rewrite
-  btnRewrite.addEventListener('click', async () => {
-    if (!selectedCharacter) return;
-    outputEl.textContent = '';
-    setLoading(rewriteStatus, 'Rewriting from POV...');
-    try {
-      const res = await fetch(`${API_BASE}/rewrite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ character: selectedCharacter })
-      });
-      if (!res.ok) throw new Error(`Rewrite failed (${res.status})`);
-      const data = await res.json().catch(() => ({}));
-      const text = data.text || data.result || data.output || '';
-      outputEl.textContent = text || 'No rewritten text returned.';
-      setStatus(rewriteStatus, 'Done');
-      clearLoading(rewriteStatus);
-    } catch (err) {
-      console.error(err);
-      clearLoading(rewriteStatus);
-      setStatus(rewriteStatus, 'Failed to rewrite.');
-    }
+    header.appendChild(checkbox);
+    header.appendChild(label);
+
+    const ta = document.createElement("textarea");
+    ta.value = p.text;
+    ta.rows = Math.min(10, Math.max(4, Math.ceil(p.text.length / 160)));
+    ta.addEventListener("input", () => {
+      p.text = ta.value;
+    });
+
+    card.appendChild(header);
+    card.appendChild(ta);
+    bookViewEl.appendChild(card);
   });
+  countSelected();
+}
+function countSelected() {
+  const n = paragraphs.filter(p => p.selected).length;
+  selectedCountEl.textContent = String(n);
+}
 
-  // Helpers
-  function escapeHtml(str) {
-    return String(str)
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
+// Mode toggle
+modeToggleEl.addEventListener("change", () => {
+  useExtractedMode = modeToggleEl.checked; // checked => Use Extracted Text
+  customSceneWrap.classList.toggle("hidden", useExtractedMode);
+  paragraphTools.classList.toggle("hidden", !useExtractedMode);
+  updateControls();
+});
+
+// Upload
+btnUpload.addEventListener("click", async () => {
+  try {
+    setStatus("Uploading PDF and extracting text...", "info");
+    rewriteOutputEl.value = "";
+    const file = pdfFileEl.files?.[0];
+    if (!file) { setStatus("Please choose a PDF file.", "warn"); return; }
+
+    const fd = new FormData();
+    fd.append("file", file, file.name);
+
+    const resp = await fetch(`${API_BASE}/pdf/upload`, { method: "POST", body: fd });
+    const body = await parseJSON(resp);
+    if (!resp.ok) httpError(resp, body);
+
+    extractedText = body?.text ?? body?.content ?? body?.data ?? "";
+    extractedTextEl.value = extractedText;
+
+    // Prepare paragraph view
+    const parts = splitIntoParagraphs(extractedText);
+    paragraphs = parts.map((t, i) => ({ id: i + 1, text: t, selected: false }));
+    renderParagraphs();
+
+    // Clear state
+    characters = [];
+    characterListEl.innerHTML = "";
+    characterSelectEl.innerHTML = '<option value="" selected>Select a character...</option>';
+
+    setStatus("PDF text extracted successfully.", "success");
+  } catch (e) {
+    console.error(e);
+    setStatus(e.message || "Failed to upload PDF.", "error");
+  } finally {
+    updateControls();
   }
 });
+
+// Extract Characters
+btnExtractCharacters.addEventListener("click", async () => {
+  try {
+    setStatus("Extracting characters...", "info");
+    rewriteOutputEl.value = "";
+
+    const text = (extractedText || "").trim();
+    if (!text) { setStatus("No text available.", "warn"); return; }
+
+    const resp = await fetch(`${API_BASE}/characters/extract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+    const body = await parseJSON(resp);
+    if (!resp.ok) httpError(resp, body);
+
+    const list = Array.isArray(body) ? body : body?.characters;
+    characters = (list || []).map(c => ({
+      name: c?.name ?? String(c?.character ?? "Unknown"),
+      description: c?.description ?? ""
+    }));
+
+    // Render list and dropdown
+    characterListEl.innerHTML = "";
+    characterSelectEl.innerHTML = '<option value="" selected>Select a character...</option>';
+    characters.forEach((c, idx) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<div class="li-title">${c.name}</div>${c.description ? `<div class="li-desc">${c.description}</div>` : ""}`;
+      characterListEl.appendChild(li);
+
+      const opt = document.createElement("option");
+      opt.value = c.name;
+      opt.textContent = c.name;
+      characterSelectEl.appendChild(opt);
+    });
+
+    setStatus(characters.length ? `Found ${characters.length} character(s).` : "No characters found.", characters.length ? "success" : "warn");
+  } catch (e) {
+    console.error(e);
+    setStatus(e.message || "Failed to extract characters.", "error");
+  } finally {
+    updateControls();
+  }
+});
+
+characterSelectEl.addEventListener("change", updateControls);
+
+// Paragraph select helpers
+btnSelectAll.addEventListener("click", () => {
+  paragraphs.forEach(p => (p.selected = true));
+  renderParagraphs();
+  updateControls();
+});
+btnClearAll.addEventListener("click", () => {
+  paragraphs.forEach(p => (p.selected = false));
+  renderParagraphs();
+  updateControls();
+});
+
+// Rewrite
+btnRewrite.addEventListener("click", async () => {
+  try {
+    setStatus("Rewriting scene...", "info");
+    rewriteOutputEl.value = "";
+
+    const character = characterSelectEl.value;
+    if (!character) { setStatus("Please select a character.", "warn"); return; }
+
+    const traits = (traitsEl.value || "").trim();
+
+    let text = "";
+    if (useExtractedMode) {
+      const chosen = paragraphs.filter(p => p.selected).map(p => p.text.trim()).filter(Boolean);
+      text = (chosen.length ? chosen.join("\n\n") : (extractedText || "")).trim();
+    } else {
+      text = (rewriteSourceEl.value || "").trim();
+    }
+    if (!text) { setStatus("No source text to rewrite.", "warn"); return; }
+
+    const resp = await fetch(`${API_BASE}/rewrite`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character, traits, text })
+    });
+    const body = await parseJSON(resp);
+    if (!resp.ok) httpError(resp, body);
+
+    // Accept common fields for compatibility
+    const output = body?.story ?? body?.rewritten ?? body?.result ?? body?.data ?? body?.text ?? "";
+    rewriteOutputEl.value = output || "[No rewrite returned]";
+    setStatus("Rewrite complete.", "success");
+  } catch (e) {
+    console.error(e);
+    setStatus(e.message || "Failed to rewrite scene.", "error");
+  } finally {
+    updateControls();
+  }
+});
+
+// Download
+btnDownload.addEventListener("click", () => {
+  const content = (rewriteOutputEl.value || "").trim();
+  if (!content) return;
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const char = characterSelectEl.value || "character";
+  a.href = url;
+  a.download = `${char}_POV_story.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+// Initial
+useExtractedMode = true; // default: Use Extracted Text
+modeToggleEl.checked = true;
+customSceneWrap.classList.add("hidden");
+paragraphTools.classList.remove("hidden");
+updateControls();

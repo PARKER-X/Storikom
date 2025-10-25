@@ -9,23 +9,55 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-def chunk_text(text, max_chunk_size=3500):
+# def chunk_text(text, max_chunk_size=3500):
+#     """
+#     Split the text into chunks of approximately max_chunk_size characters,
+#     breaking at sentence boundaries for cleaner splits.
+#     """
+#     sentences = text.split('. ')
+#     chunks = []
+#     current_chunk = ""
+#     for sentence in sentences:
+#         if len(current_chunk) + len(sentence) + 2 <= max_chunk_size:
+#             current_chunk += sentence + ". "
+#         else:
+#             chunks.append(current_chunk.strip())
+#             current_chunk = sentence + ". "
+#     if current_chunk:
+#         chunks.append(current_chunk.strip())
+#     return chunks
+
+def chunk_text(text, min_chunks=25, max_chunks=52):
     """
-    Split the text into chunks of approximately max_chunk_size characters,
-    breaking at sentence boundaries for cleaner splits.
+    Split text into smaller chunks dynamically.
+    - Ensures each chunk is ~1/52 to 1/25 of total text length.
     """
+    total_length = len(text)
+    
+    # Decide chunk size
+    max_chunk_size = max(total_length // min_chunks, 500)  # Avoid tiny chunks <500 chars
+    min_chunk_size = total_length // max_chunks
+
     sentences = text.split('. ')
     chunks = []
     current_chunk = ""
+
     for sentence in sentences:
         if len(current_chunk) + len(sentence) + 2 <= max_chunk_size:
             current_chunk += sentence + ". "
         else:
-            chunks.append(current_chunk.strip())
-            current_chunk = sentence + ". "
+            if len(current_chunk) >= min_chunk_size:
+                chunks.append(current_chunk.strip())
+                current_chunk = sentence + ". "
+            else:
+                # If current chunk is too small, merge
+                current_chunk += sentence + ". "
+    
     if current_chunk:
         chunks.append(current_chunk.strip())
+    
     return chunks
+
 
 def rewrite_chunk_from_pov(character_name, traits, chunk_text, chunk_number):
     """
