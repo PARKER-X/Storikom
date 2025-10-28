@@ -135,20 +135,27 @@ BookiFi/
 │   │   ├── pdf_extract.py     # PDF text extraction logic
 │   │   ├── embed.py           # Embedding & vector DB logic
 │   │   ├── chroma_db.py       # ChromaDB helper (load/store chunks)
-│   │   └── __init__.py
-│   └── __init__.py
+│   │   ├── character.py       # Character logic
+│   │   ├── pdf_extracter.py   # Pdf upload logic
+│   │   ├── pov.py             # Charcter Pov logic
 │
 ├── 📁 utils/                   # Utility functions (LLM interaction, prompts, etc.)
 │   ├── character_extractor.py # Uses LLM to extract characters + traits
 │   ├── pov_rewriter.py        # Rewrites story from character POV
-│   ├── character_chat.py      # Handles character chat
-│   └── __init__.py
+│   └── chatbot.py             # Handles character chat
 │
 ├── 📁 tests/                   # For testing modules (unit or integration)
 │   ├── sample.pdf             # Demo novel for dev/testing
 │   ├── test_pipeline1.py
 │   └── test2.py
 │
+├── 📁 static                 # For js/css
+│   ├── js                     # Js file
+│   ├── css                    # css file
+│   
+├── 📁 templated              # For frontend
+│   ├── index.html             # html file
+│   
 ├── 📁 chroma_db/              # Local vector store (auto created by Chroma)
 │   └── index data
 │
