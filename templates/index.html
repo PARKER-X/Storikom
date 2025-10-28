@@ -1,127 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BookiFi — POV Rewriter</title>
-  <link rel="stylesheet" href="/static/style.css" />
+    <meta charset="UTF-8">
+    <title>BookiFi - Rewrite Your Favorite Novel</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header class="app-header">
-    <h1>BookiFi</h1>
-    <p class="subtitle">Upload • Extract Characters • Rewrite in POV</p>
-  </header>
+<div id="wrapper">
+    <div id="container">
+        <section class="open-book">
+            <header>
+                <h1>BookiFi</h1>
+                <h6>Rewrite your favorite novel from a new perspective</h6>
+            </header>
 
-  <main class="container">
-    <div id="status" role="status" aria-live="polite" class="status"></div>
+            <article>
+                <h2 class="chapter-title">Upload Your Book</h2>
+                <form id="uploadForm">
+                    <input type="file" id="pdfFile" accept=".pdf,.txt" required>
+                    <button type="submit">Upload</button>
+                </form>
+                <p id="uploadStatus"></p>
 
-    <!-- Step 1: Upload -->
-    <section class="card" aria-labelledby="upload-title">
-      <div class="card-header">
-        <h2 id="upload-title">1. Upload PDF</h2>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <label for="pdfFile" class="label">Choose PDF</label>
-          <input type="file" id="pdfFile" accept="application/pdf" />
-        </div>
-        <div class="row">
-          <button id="btnUpload" class="btn">Upload & Extract Text</button>
-        </div>
-        <details class="details">
-          <summary>Show Extracted Raw Text</summary>
-          <textarea id="extractedText" rows="8" readonly placeholder="Extracted text will appear here..."></textarea>
-        </details>
-      </div>
-    </section>
+                <div id="characterSection" style="display:none;">
+                    <h2 class="chapter-title">Choose a Character</h2>
+                    <select id="characterSelect"></select>
+                    <button id="rewriteBtn">Rewrite Book</button>
+                </div>
 
-    <!-- Step 2: Extract Characters -->
-    <section class="card" aria-labelledby="characters-title">
-      <div class="card-header">
-        <h2 id="characters-title">2. Extract Characters</h2>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <button id="btnExtractCharacters" class="btn" disabled>Extract Characters</button>
-        </div>
-        <div class="row">
-          <label class="label">Detected Characters</label>
-          <ul id="characterList" class="list"></ul>
-        </div>
-      </div>
-    </section>
+                <div id="storySection" style="display:none;">
+                    <h2 class="chapter-title">Rewritten Story</h2>
+                    <div id="storyOutput" style="white-space: pre-wrap; font-size: 1.1em;"></div>
+                </div>
+            </article>
 
-    <!-- Step 3: POV Rewrite -->
-    <section class="card" aria-labelledby="rewrite-title">
-      <div class="card-header">
-        <h2 id="rewrite-title">3. Choose Character & Rewrite</h2>
-      </div>
-      <div class="card-body">
-        <div class="grid-3">
-          <div class="row">
-            <label for="characterSelect" class="label">Character</label>
-            <select id="characterSelect" disabled>
-              <option value="" selected>Select a character...</option>
-            </select>
-          </div>
-          <div class="row">
-            <label for="traits" class="label">Traits / Style Hints</label>
-            <input id="traits" type="text" placeholder="e.g., brave, witty, nostalgic" />
-          </div>
-          <div class="row">
-            <label class="label">Rewrite Mode</label>
-            <div class="switch">
-              <input type="checkbox" id="modeToggle" />
-              <label for="modeToggle">
-                <span class="on">Use Extracted Text</span>
-                <span class="off">Custom Scene</span>
-              </label>
-            </div>
-          </div>
-        </div>
+            <footer>
+                <ol id="page-numbers">
+                    <li>1</li>
+                </ol>
+            </footer>
+        </section>
+    </div>
+</div>
 
-        <!-- Mode: Custom Scene -->
-        <div class="row mode-custom hidden" id="customSceneWrap">
-          <label for="rewriteSource" class="label">Paste Scene</label>
-          <textarea id="rewriteSource" rows="8" placeholder="Paste a scene to rewrite..."></textarea>
-        </div>
-
-        <!-- Mode: Extracted Text with Book-like paragraphs -->
-        <div class="row mode-extracted" id="paragraphTools">
-          <div class="paragraph-toolbar">
-            <div class="left">
-              <button id="btnSelectAll" class="btn btn-secondary" disabled>Select All</button>
-              <button id="btnClearAll" class="btn btn-secondary" disabled>Clear</button>
-            </div>
-            <div class="right">
-              <span class="label">Selected:</span>
-              <span id="selectedCount">0</span>
-            </div>
-          </div>
-          <div id="bookView" class="book-view">
-            <!-- Paragraph cards appear here -->
-          </div>
-        </div>
-
-        <div class="row">
-          <button id="btnRewrite" class="btn" disabled>Rewrite</button>
-        </div>
-
-        <div class="row">
-          <label for="rewriteOutput" class="label">Rewritten Story</label>
-          <textarea id="rewriteOutput" rows="12" readonly placeholder="Rewritten story will appear here..."></textarea>
-          <div class="row-right">
-            <button id="btnDownload" class="btn btn-secondary" disabled>Download .txt</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <small>FastAPI + Minimal Web UI</small>
-  </footer>
-
-  <script src="/static/script.js"></script>
+<script src="/static/script.js"></script>
 </body>
 </html>

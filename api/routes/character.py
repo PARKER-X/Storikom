@@ -9,5 +9,8 @@ class TextInput(BaseModel):
 
 @router.post("/extract")
 async def extract_characters(payload: TextInput):
+    print("Received text:", payload.text[:200])  # first 200 chars
     characters = extract_characters_from_text(payload.text)
+    print("Extracted characters:", characters)
     return {"characters": characters}
+

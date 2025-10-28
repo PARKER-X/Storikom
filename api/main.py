@@ -4,7 +4,7 @@ from routes.pdf_extract import extract_text_from_pdf
 # from routes.chroma_db import embed_and_save, collection
 from utils.character_extractor import extract_characters_from_text
 from utils.pov_rewriter import rewrite_story_from_pov
-
+from utils.chatbot import chat_as_character
 
 st.set_page_config(page_title="BookiFi: AI Book POV Rewriter", layout="wide")
 st.title("📚 BookiFi: Rewrite Novel From a Character's Point of View")
@@ -66,3 +66,15 @@ if uploaded_file:
                     file_name=f"{selected_char}_POV_story.txt",
                     mime="text/plain"
                 )
+    st.markdown("---")
+    st.subheader(f"💬 Chat as {selected_char}")
+
+    user_input = st.text_input("Ask a question or talk to the character:")
+
+    if st.button("Send Chat"):
+        if user_input.strip() == "":
+            st.warning("Please enter a question first.")
+        else:
+            with st.spinner(f"💡 {selected_char} is responding..."):
+                ai_reply = chat_as_character(user_input, selected_char, selected_desc)
+                st.markdown(f"**{selected_char}:** {ai_reply}")

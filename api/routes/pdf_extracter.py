@@ -10,4 +10,5 @@ async def upload_pdf(file: UploadFile = File(...)):
         text = extract_text_from_pdf(file)
         return JSONResponse(content={"success": True, "text": text})
     except Exception as e:
+        print("⚠️ PDF upload failed:", e)
         return JSONResponse(content={"success": False, "error": str(e)})
