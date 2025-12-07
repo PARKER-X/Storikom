@@ -88,7 +88,6 @@ uploadForm.addEventListener('submit', async (e) => {
     formData.append("file", file);
 
     try {
-<<<<<<< HEAD
         const response = await fetch("/pdf/extract", {
             method: "POST",
             body: formData
@@ -165,58 +164,4 @@ document.querySelectorAll('.feature-card, .step').forEach(el => {
     el.style.transform = 'translateY(30px)';
     el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
     observer.observe(el);
-=======
-        const pdfRes = await fetch("/pdf/extract", {
-            method: "POST",
-            body: formData
-        });
-        const pdfData = await pdfRes.json();
-        extractedText = pdfData.text;
-
-        const charRes = await fetch("/characters/get", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: extractedText })
-        });
-
-        const charData = await charRes.json();
-        uploadStatus.textContent = "Characters extracted! Choose one below:";
-        characterSection.style.display = "block";
-
-        characterSelect.innerHTML = "";
-        charData.characters.forEach(char => {
-            const option = document.createElement("option");
-            option.value = char;
-            option.textContent = char;
-            characterSelect.appendChild(option);
-        });
-    } catch (err) {
-        uploadStatus.textContent = "Error processing file.";
-        console.error(err);
-    }
-});
-
-rewriteBtn.addEventListener('click', async () => {
-    const selectedChar = characterSelect.value;
-    if (!selectedChar) return alert("Please select a character.");
-
-    storySection.style.display = "block";
-    storyOutput.textContent = "Rewriting book from " + selectedChar + "'s POV...";
-
-    try {
-        const rewriteRes = await fetch("/rewrite/character", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                character: selectedChar,
-                text: extractedText
-            })
-        });
-        const rewriteData = await rewriteRes.json();
-        storyOutput.textContent = rewriteData.rewritten_text;
-    } catch (err) {
-        storyOutput.textContent = "Error rewriting story.";
-        console.error(err);
-    }
->>>>>>> 4d03f41741da3cd494cf3ba79950082f672c4a98
 });

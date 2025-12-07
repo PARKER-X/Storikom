@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from fastapi import APIRouter
 from pydantic import BaseModel
 from api.routes.chroma_db import embed_and_save
@@ -42,13 +41,3 @@ async def generate_embeddings(payload: EmbedRequest):
             "success": False,
             "error": str(e)
         }
-=======
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-def chunk_text(text):
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50
-    )
-    return splitter.split_text(text)
->>>>>>> 4d03f41741da3cd494cf3ba79950082f672c4a98
