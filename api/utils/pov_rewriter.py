@@ -89,11 +89,11 @@ Rewrite the following **part of the story** from your **first-person point of vi
     response = model.generate_content(prompt)
     return response.text
 
-def rewrite_story_from_pov(character_name, traits, full_text, max_chunk_size=3500):
+def rewrite_story_from_pov(character_name, traits, full_text, min_chunks=25, max_chunks=52):
     """
     Rewrite the entire story by chunking it and rewriting each chunk from the character's POV.
     """
-    chunks = chunk_text(full_text, max_chunk_size)
+    chunks = chunk_text(full_text, min_chunks=min_chunks, max_chunks=max_chunks)
     rewritten_parts = []
     
     for i, chunk in enumerate(chunks, start=1):
