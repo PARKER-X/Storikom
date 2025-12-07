@@ -58,3 +58,15 @@ app.include_router(embed.router, prefix="/embed", tags=["Embeddings"])
 app.include_router(chat.router, prefix="/chat", tags=["Chat"])
 =======
 >>>>>>> 4d03f41741da3cd494cf3ba79950082f672c4a98
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    # Run the application
+    uvicorn.run(
+        uvicorn.run("api.main:app", host="0.0.0.0", port=8000),
+        host="0.0.0.0",
+        port=8000,
+        reload=True,  # Enable auto-reload for development
+        log_level="info"
+    )
