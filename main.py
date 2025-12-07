@@ -64,7 +64,7 @@ if __name__ == "__main__":
     
     # Run the application
     uvicorn.run(
-        uvicorn.run("api.main:app", host="0.0.0.0", port=8000),
+        uvicorn.run("main:app", host="0.0.0.0", port=8000),
         host="0.0.0.0",
         port=8000,
         reload=True,  # Enable auto-reload for development
