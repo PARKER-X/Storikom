@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+<<<<<<< HEAD
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookiFi - Rewrite Your Novel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -168,5 +169,49 @@
     </footer>
 
     <script src="/static/script.js"></script>
+=======
+    <title>BookiFi - Rewrite Your Favorite Novel</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div id="wrapper">
+    <div id="container">
+        <section class="open-book">
+            <header>
+                <h1>BookiFi</h1>
+                <h6>Rewrite your favorite novel from a new perspective</h6>
+            </header>
+
+            <article>
+                <h2 class="chapter-title">Upload Your Book</h2>
+                <form id="uploadForm">
+                    <input type="file" id="pdfFile" accept=".pdf,.txt" required>
+                    <button type="submit">Upload</button>
+                </form>
+                <p id="uploadStatus"></p>
+
+                <div id="characterSection" style="display:none;">
+                    <h2 class="chapter-title">Choose a Character</h2>
+                    <select id="characterSelect"></select>
+                    <button id="rewriteBtn">Rewrite Book</button>
+                </div>
+
+                <div id="storySection" style="display:none;">
+                    <h2 class="chapter-title">Rewritten Story</h2>
+                    <div id="storyOutput" style="white-space: pre-wrap; font-size: 1.1em;"></div>
+                </div>
+            </article>
+
+            <footer>
+                <ol id="page-numbers">
+                    <li>1</li>
+                </ol>
+            </footer>
+        </section>
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+>>>>>>> 4d03f41741da3cd494cf3ba79950082f672c4a98
 </body>
 </html>

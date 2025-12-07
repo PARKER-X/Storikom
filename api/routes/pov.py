@@ -11,6 +11,7 @@ class RewriteRequest(BaseModel):
 
 @router.post("/")
 async def rewrite_story(payload: RewriteRequest):
+<<<<<<< HEAD
     """
     Rewrite story from character's POV.
     """
@@ -37,3 +38,11 @@ async def rewrite_from_character(payload: RewriteRequest):
     Alias endpoint for rewriting from character POV.
     """
     return await rewrite_story(payload)
+=======
+    rewritten_text = rewrite_story_from_pov(
+        character_name=payload.character_name,
+        traits=payload.traits,
+        full_text=payload.text
+    )
+    return {"rewritten_text": rewritten_text}
+>>>>>>> 4d03f41741da3cd494cf3ba79950082f672c4a98
