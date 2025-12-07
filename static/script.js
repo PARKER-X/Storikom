@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // Homepage JavaScript - Handles PDF upload and redirects to story page
 
 const uploadForm = document.getElementById('uploadForm');
@@ -85,26 +84,6 @@ uploadForm.addEventListener('submit', async (e) => {
     uploadBtn.querySelector('.btn-loader').style.display = 'flex';
     showStatus(uploadStatus, 'Uploading and extracting text...', 'loading');
     
-=======
-const uploadForm = document.getElementById('uploadForm');
-const uploadStatus = document.getElementById('uploadStatus');
-const characterSection = document.getElementById('characterSection');
-const characterSelect = document.getElementById('characterSelect');
-const rewriteBtn = document.getElementById('rewriteBtn');
-const storySection = document.getElementById('storySection');
-const storyOutput = document.getElementById('storyOutput');
-
-let extractedText = "";
-
-uploadForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const file = document.getElementById('pdfFile').files[0];
-    if (!file) return alert('Please select a file.');
-
-    uploadStatus.textContent = "Uploading and extracting characters...";
-    
-    // Upload the file to backend
->>>>>>> 4d03f41741da3cd494cf3ba79950082f672c4a98
     const formData = new FormData();
     formData.append("file", file);
 
