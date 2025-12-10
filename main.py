@@ -35,12 +35,12 @@ app.include_router(pov.router, prefix="/rewrite", tags=["Rewrite"])
 app.include_router(embed.router, prefix="/embed", tags=["Embeddings"])
 app.include_router(chat.router, prefix="/chat", tags=["Chat"])
 
-# if __name__ == "__main__":
-#     import uvicorn
+if __name__ == "__main__":
+    import uvicorn
     
-#     # Run the application
-#     uvicorn.run("main:app", host="0.0.0.0", port=8000),
-#     host="0.0.0.0",
-#     port=8000,
-#     reload=True,  # Enable auto-reload for development
-#     log_level="info"
+    # Run the application
+    uvicorn.run("main:app", host="0.0.0.0", port=8000),
+    host="0.0.0.0",
+    port=8000,
+    reload=True,  # Enable auto-reload for development
+    log_level="info"
